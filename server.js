@@ -44,6 +44,7 @@ var initDb = function(callback) {
 
   mongodb.connect(mongoURL, function(err, conn) {
     if (err) {
+        DB_Error = JSON.stringify(err);
       callback(err);
       return;
     }
