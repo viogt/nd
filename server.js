@@ -11,7 +11,8 @@ app.use(morgan('combined'))
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
-    mongoURLLabel = "";
+    mongoURLLabel = "",
+    DB_Error = 'no error';
 
 if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
@@ -71,7 +72,7 @@ app.get('/', function (req, res) {
     });
   } else {
       
-      var Mng = process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE + '<br>' + mongoURL;
+      var Mng = '> DB error = ' + DB_Error + '\n> ' + process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE + '\n> ' + mongoURL;
       
     res.render('index.html', { Mng: Mng, pageCountMessage : null});
   }
