@@ -71,7 +71,7 @@ app.get('/', function (req, res) {
     });
   } else {
       
-      var Mng = process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE;
+      var Mng = process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE + '<br>' + mongoURL;
       
     res.render('index.html', { Mng: Mng, pageCountMessage : null});
   }
