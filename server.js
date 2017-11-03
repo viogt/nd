@@ -73,7 +73,7 @@ app.get('/', function (req, res) {
       
       var Mng = process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE;
       
-    res.render('index.html', { mongo: Mng, pageCountMessage : null});
+    res.render('index.html', { Mng: Mng, pageCountMessage : null});
   }
 });
 
