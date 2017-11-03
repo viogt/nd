@@ -70,7 +70,10 @@ app.get('/', function (req, res) {
       res.render('index.html', { pageCountMessage : count, dbInfo: dbDetails });
     });
   } else {
-    res.render('index.html', { pageCountMessage : null});
+      
+      var Mng = process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE;
+      
+    res.render('index.html', { mongo: Mng, pageCountMessage : null});
   }
 });
 
