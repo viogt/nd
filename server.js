@@ -81,7 +81,7 @@ app.get('/', function (req, res) {
     });
   } else {
       
-      var Mng = '> DB error = ' + DB_Error + '\n> ' + process.env.MONGODB_USER + ":" + process.env.MONGODB_PASSWORD + ":" + process.env.MONGODB_DATABASE + '\n> ' + mongoURL;
+      var Mng = '> Error Info: [' + DB_Error + '], User:' + process.env.MONGODB_USER + ", Password:" + process.env.MONGODB_PASSWORD + ", DataBase:" + process.env.MONGODB_DATABASE + '\n> MongoURL:' + mongoURL;
       
     res.render('index.html', { Mng: Mng, pageCountMessage : null});
   }
