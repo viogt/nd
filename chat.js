@@ -1,63 +1,50 @@
-/**
-Before running:
-> npm install ws
-Then:
-> node chat.js
-> open http://localhost:8080 in the browser
-*/
 
-const http = require('http');
-const fs = require('fs');
-//const ws = new require('ws');
-const ws = new require('ws');
+const http = require('http').createServer((req, res) => {
+        //if(req.method == 'GET' && req.url == '/')
+        serveFile(__dirname + '/chat.html', res);
+        }),
+    fs = require('fs'),
+    io = require('socket.io')(http);
 
-const wss = new ws.Server({noServer: true});
-
-const clients = new Set();
-
-function accept(req, res) {
-
-  if (req.url.substr(0,3) == '/ws' && req.headers.upgrade &&
-      req.headers.upgrade.toLowerCase() == 'websocket' &&
-      // can be Connection: keep-alive, Upgrade
-      req.headers.connection.match(/\bupgrade\b/i)) {
-    wss.handleUpgrade(req, req.socket, Buffer.alloc(0), onSocketConnect);
-  } else if (req.url == '/') { // index.html
-    fs.createReadStream('./chat.html').pipe(res);
-  } else { // page not found
-    res.writeHead(404);
-    res.end();
-  }
+function serveFile(fl, resp){
+    resp.setHeader("Content-Type", "text/html; charset=utf-8");
+    try {
+        var file = fs.createReadStream(fl);
+        file.pipe(resp);
+    } catch(e) { console.log("Fale: " + fl + " - " + e.message); }
 }
 
-function onSocketConnect(ws) {
-  clients.add(ws);
-  console.log('=> new connection');
-
-  ws.on('message', function(message) {
-    console.log(`-> message received: ${message}`);
-
-    message = message.slice(0, 50); // max message length will be 50
-
-    for(let client of clients) {
-      client.send(message);
-    }
-  });
-
-  ws.on('close', function() {
-    console.log('...connection closed');
-    clients.delete(ws);
-  });
+var NAMES = [];
+function assignNew(name) {
+    for(let nm of NAMES) if(nm == name) return false;
+    NAMES.push(name);
+    return true;
+}
+var CLR = ["red", "blue", "darkgreen", "purple", "orange"];
+function usrColor(name) {
+    for(var i in NAMES) if(NAMES[i]==name) return CLR[i % CLR.length];
+    return "orange";
 }
 
-let log;
-if (!module.parent) {
-  log = console.log;
-  http.createServer(accept).listen(8080);
-} else {
-  // to embed into javascript.info
-  log = function() {};
-  // log = console.log;
-  exports.accept = accept;
-}
-//function log(x) { console.log(x); }
+io.sockets.on('connection', socket => {
+    socket.on('username', username => {
+        socket.username = username;
+        if(assignNew(username))
+            io.emit('is_online', {username: username, cmt: usrColor(username)});
+        else
+            io.emit('is_online', {username: socket.username, cmt: 'exists'});
+    });
+
+    socket.on('disconnect', username => {
+        io.emit('is_online', {username: socket.username, cmt: 'disconnect'});
+    })
+
+    socket.on('chat_message', message => {
+        io.emit('chat_message', {usr:socket.username, msg:message, clr: usrColor(socket.username)});
+    });
+
+});
+
+const server = http.listen(8080, () => {
+    console.log('> listening on *:8080');
+});
