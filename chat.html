@@ -1,39 +1,65 @@
-<!doctype html>
-<form name="publish">
-  <input type="text" name="message" maxlength="50"/>
-  <input type="submit" value="Send"/>
-</form>
-
-<div id="messages"></div>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Group Chat on Node.js</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 13px Helvetica, Arial; }
+        form { background: #fff; padding: 3px; position: fixed; bottom: 0; width: 100%; border-color: #000; border-top-style: solid; border-top-width: 1px;}
+        form input { border-style: solid; border-width: 1px; padding: 10px; width: 85%; margin-right: .5%; }
+        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; margin-left: 2%; }
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 5px 10px; }
+        #messages li:nth-child(odd) { background: #eee; }
+    </style>
+    <script src="../../socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form action="/" method="POST" id="Frm">
+      <input id="txt" autocomplete="off" autofocus="on" oninput="isTyping()" placeholder="type your message here..." /><button>Send</button>
+    </form>
 
 <script>
-let url = location.host == 'localhost' ?
-  'ws://localhost:8080/ws' : location.host == 'javascript.local' ?
-  `ws://javascript.local/article/websocket/chat/ws` : // dev integration with local site
-  `wss://javascript.info/article/websocket/chat/ws`; // prod integration with javascript.info
+    const socket = io.connect('http://localhost:8080');
 
-let socket = new WebSocket(url);
+    function id(x) { return document.getElementById(x); }
+    const List = id("messages"), txt = id("txt");
 
-// send message from the form
-document.forms.publish.onsubmit = function() {
-  let outgoingMessage = this.message.value;
+    function addToList(mesaj) {
+        let li = document.createElement("li");
+        li.innerHTML = mesaj;
+        List.appendChild(li);
+    }
 
-  socket.send(outgoingMessage);
-  return false;
-};
+    function assignNew() {
+        var name;
+        while(true) {
+            name = prompt('Please tell me your name').trim();
+            if(name == "") continue;
+            socket.emit('username', name);
+            return;
+        }
+    }
 
-// handle incoming messages
-socket.onmessage = function(event) {
-  let incomingMessage = event.data;
-  showMessage(incomingMessage);
-};
+    id("Frm").addEventListener("submit", e=>{
+        e.preventDefault();
+        socket.emit('chat_message', txt.value);
+        txt.value = "";
+    }, false);
 
-socket.onclose = event => console.log(`Closed ${event.code}`);
+    socket.on('chat_message', function(msg){
+        addToList(`<span style='color:${msg.clr};font-weight:bold;'>${msg.usr}</span>: ${msg.msg}`);
+    });
 
-// show message in div#messages
-function showMessage(message) {
-  let messageElem = document.createElement('div');
-  messageElem.textContent = message;
-  document.getElementById('messages').prepend(messageElem);
-}
+    socket.on('is_online', usr => {
+        if(usr.cmt == 'exists') { addToList('🔴 <i>' + usr.username +' already exists - try another ID.</i>'); assignNew(); }
+        else if(usr.cmt == 'disconnect') msg = '🔴 <i>' + usr.username +' left the chat.</i>';
+        else msg = `<span style="color:${usr.cmt}">◉ ${usr.username}</span> <i>joined the chat.</i>`;
+        addToList(msg);
+    });
+
+    assignNew();
 </script>
+  </body>
+</html>
